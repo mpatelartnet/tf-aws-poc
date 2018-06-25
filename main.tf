@@ -2,22 +2,21 @@
 # VARIABLES
 ##################################################################################
 
+# Access VAriables #
 variable "aws_access_key" {}
+
 variable "aws_secret_key" {}
 variable "private_key_path" {}
 variable "key_name" {}
 
-variable "network_address_space" {
-  default = "172.17.0.0/16"
-}
+# Network Variables #
 
-variable "subnet1_address_space" {
-  default = "172.17.0.0/24"
-}
+variable "vpc_name" {}
+variable "network_address_space" {}
 
-variable "subnet2_address_space" {
-  default = "172.17.1.0/24"
-}
+variable "subnet1_address_space" {}
+
+variable "subnet2_address_space" {}
 
 ##################################################################################
 # PROVIDERS
@@ -43,6 +42,10 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "vpc" {
   cidr_block           = "${var.network_address_space}"
   enable_dns_hostnames = "true"
+
+  tags {
+    Name = "vpc-${var.vpc_name}"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
@@ -85,7 +88,7 @@ resource "aws_route_table_association" "rta-subnet2" {
 
 # SECURITY GROUPS #
 # TF security group 
-resource "aws_security_group" "sg-1" {
+resource "aws_security_group" "sg1" {
   name   = "sg_tftest"
   vpc_id = "${aws_vpc.vpc.id}"
 
@@ -116,7 +119,7 @@ resource "aws_security_group" "sg-1" {
 
 # INSTANCES #
 
-resource "aws_instance" "aws-instance-1" {
+resource "aws_instance" "aws-instance1" {
   ami           = "ami-a4dc46db"
   instance_type = "t2.micro"
   key_name      = "${var.key_name}"
@@ -130,14 +133,7 @@ resource "aws_instance" "aws-instance-1" {
     inline = [
       "sudo apt-get update",
       "wget https://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-software-7.9.2-x64.bin",
+      "sudo ./atlassian-jira-software-7.9.2-x64.bin",
     ]
   }
-}
-
-##################################################################################
-# OUTPUT
-##################################################################################
-
-output "aws_instance_public_dns" {
-  value = "${aws_instance.aws-instance-1.public_dns}"
 }
